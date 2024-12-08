@@ -113,6 +113,21 @@ io.on('connection', (socket) => {
       console.log('[SCAN STARTED]');
     });
   });
+  //getmac
+  socket.on('getmac', ({ user, command }) => {
+    if (!ports[user]) {
+      console.error(`[ERROR]: Port for ${user} not initialized.`);
+      socket.emit('error', `[ERROR]: Port for ${user} not initialized.`);
+      return;
+    }
+    console.log(`[${user.toUpperCase()}]: Sending command: ${command}`);
+    ports[user].write(`${command}\r\n`, (err) => {
+      if (err) {
+        console.error(`[ERROR]: Failed to send command for ${user}`);
+        socket.emit('error', `[ERROR]: Failed to send command for ${user}`);
+      }
+    });
+  });
 
   // Connect to device for User 1
   socket.on('connectDevice', (mac) => {

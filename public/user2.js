@@ -8,6 +8,26 @@ const chatLog = document.getElementById('chatLog');
 console.log('[USER 2]: Setting dual role and starting advertising');
 socket.emit('setDualRole', 'user2');
 
+// Request MAC address after setting dual role and starting advertising
+setTimeout(() => {
+  console.log('[USER 2]: Requesting MAC address');
+  socket.emit('getmac', { user: 'user2', command: 'AT+GETMAC' });
+}, 1000); // Slight delay to ensure dual role is set
+
+// Handle incoming MAC address response
+socket.on('user2Message', (message) => {
+  console.log('[USER 2]: Received message:', message);
+  if (message.includes('OWN MAC ADDRESS:')) {
+    const macMatch = message.match(/OWN MAC ADDRESS:(.+)/);
+    if (macMatch && macMatch[1]) {
+      const formattedMac = `[0]${macMatch[1].trim()}`;
+      displayMacAddress(formattedMac);
+    }
+  } else {
+    processMessage('User 1', message);
+  }
+});
+
 // Send Message
 sendBtn.addEventListener('click', () => {
   const message = messageInput.value.trim();
@@ -19,12 +39,6 @@ sendBtn.addEventListener('click', () => {
   } else {
     alert('Please enter a message.');
   }
-});
-
-// Display Messages
-socket.on('user2Message', (message) => {
-  console.log('[USER 2]: Received message:', message);
-  processMessage('User 1', message);
 });
 
 // Helper Functions
@@ -42,4 +56,11 @@ function processMessage(sender, message) {
       addToChatLog(sender, receivedMatch[1].trim());
     }
   }
+}
+
+function displayMacAddress(mac) {
+  const macDisplay = document.createElement('div');
+  macDisplay.className = 'alert alert-secondary'; // Bootstrap styling
+  macDisplay.textContent = `Device MAC Address: ${mac}`;
+  document.querySelector('.container').prepend(macDisplay); // Display at the top of the page
 }
